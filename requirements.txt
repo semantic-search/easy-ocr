@@ -4,4 +4,4 @@ python-multipart
 easyocr
 redis
 python-dotenv
-KafkaProducer
+kafka-python

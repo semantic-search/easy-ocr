@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from kafka import  KafkaProducer
 import redis
 import json
+import os
 
 load_dotenv()
 
@@ -57,7 +58,7 @@ def create_upload_file(file: UploadFile = File(...), image_id: str = Form(...)):
      # Redis Kafka Stuff
     r.set("Keras_Container", "FREE")
     producer.send('CONTAINER_TOPIC', value=response)
-    
+
     return json.dumps(response, default=convert)
 
 

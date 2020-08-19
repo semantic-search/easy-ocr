@@ -13,5 +13,7 @@ RUN pip install -r requirements.txt
 EXPOSE 80
 
 COPY . /app
+COPY .env /app/.env
+
 
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "80", "--reload"]

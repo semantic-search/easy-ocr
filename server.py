@@ -16,15 +16,21 @@ REDIS_HOSTNAME = os.getenv("REDIS_HOSTNAME")
 REDIS_PORT = os.getenv("REDIS_PORT")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 KAFKA_HOSTNAME = os.getenv("KAFKA_HOSTNAME")
-KAFKA_PORT = os.getenv("KAFKA_HOSTNAME")
+KAFKA_PORT = os.getenv("KAFKA_PORT")
+
+CONTAINER_NAME = 'EASY_OCR'
+TOPIC_NAME = "IMAGE_RESULTS"
 
 
 # Redis initialize
 r = redis.StrictRedis(host=REDIS_HOSTNAME, port=REDIS_PORT,
                       password=REDIS_PASSWORD, ssl=True)
 # Kafka initialize
-producer = KafkaProducer(bootstrap_servers=[f'{KAFKA_HOSTNAME}:{KAFKA_PORT}'],
-                        value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+producer = KafkaProducer(
+    bootstrap_servers=["40.88.35.171:9092"],
+    value_serializer=lambda x: json.dumps(x).encode("utf-8"),
+    api_version=(0, 10, 1)
+)
 
 app = FastAPI()
 
@@ -35,7 +41,7 @@ reader = easyocr.Reader(['en'])
 def create_upload_file(file: UploadFile = File(...), image_id: str = Form(...)):
 
     # Redis Stuff
-    r.set("Keras_Container", "BUSY")
+    r.set(CONTAINER_NAME, "BUSY")
 
     fileName = file.filename
     contents = file.file.read()
@@ -56,8 +62,10 @@ def create_upload_file(file: UploadFile = File(...), image_id: str = Form(...)):
     print(response)
 
      # Redis Kafka Stuff
-    r.set("Keras_Container", "FREE")
-    producer.send('CONTAINER_TOPIC', value=response)
+    r.set(CONTAINER_NAME, "FREE")
+    future = producer.send(TOPIC_NAME, value=json.dumps(response, default=convert))
+    result = future.get(timeout=60)
+    print(result)
 
     return json.dumps(response, default=convert)
 
@@ -69,3 +77,5 @@ def recognize(img):
 def convert(o):
     if isinstance(o, numpy.int64): return int(o)  
     raise TypeError
+
+# uvicorn server:app --host 0.0.0.0 --port 80 --reload

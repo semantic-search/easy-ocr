@@ -13,7 +13,5 @@ RUN pip install -r requirements.txt
 EXPOSE 80
 
 COPY . /app
-COPY .env /app/.env
-
 
 CMD ["python", "server.py"]

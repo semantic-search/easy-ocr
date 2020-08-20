@@ -7,5 +7,5 @@ docker build -t easyocr .
 Run 
 
 ```
-docker run --gpus all --env-file .env easyocr
+docker run --gpus all --env-file .env -it easyocr bash
 ```

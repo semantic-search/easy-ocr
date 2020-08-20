@@ -2,10 +2,14 @@ import json
 import numpy
 import easyocr
 
-# imports for env kafka and redis
+# imports for env kafka
 from dotenv import load_dotenv
 from kafka import  KafkaProducer
+from kafka import KafkaConsumer
+from json import loads
+import base64
 import json
+
 import os
 
 load_dotenv()
@@ -15,7 +19,9 @@ KAFKA_HOSTNAME = os.getenv("KAFKA_HOSTNAME")
 KAFKA_PORT = os.getenv("KAFKA_PORT")
 
 RECEIVE_TOPIC = 'EASY_OCR'
-SEND_TOPIC = "IMAGE_RESULTS"
+SEND_TOPIC_FULL = "IMAGE_RESULTS"
+SEND_TOPIC_TEXT = "TEXT"
+
 
 print(f"kafka : {KAFKA_HOSTNAME}:{KAFKA_PORT}")
 
@@ -29,15 +35,26 @@ consumer_easyocr = KafkaConsumer(
     value_deserializer=lambda x: loads(x.decode("utf-8")),
 )
 
-# Send processed img data further 
+# For Sending processed img data further 
 producer = KafkaProducer(
     bootstrap_servers=[f"{KAFKA_HOSTNAME}:{KAFKA_PORT}"],
     value_serializer=lambda x: json.dumps(x).encode("utf-8"),
 )
 
-for message in consumer_easyocr:
 
+def recognize(img):
     reader = easyocr.Reader(['en'])
+    predictions = reader.readtext(img)
+    return predictions
+
+def convert(o):
+    if isinstance(o, numpy.int64): return int(o)  
+    raise TypeError
+
+for message in consumer_easyocr:
+    print('xxx--- inside easyocr consumer---xxx')
+    print(f"kafka - - : {KAFKA_HOSTNAME}:{KAFKA_PORT}")
+
 
     message = message.value
     image_id = message['image_id']
@@ -47,7 +64,11 @@ for message in consumer_easyocr:
 
     predictions = recognize(data)
 
-    response = {
+    full_res = {
+        'image_id': image_id
+    }
+
+    text_res = {
         'image_id': image_id
     }
 
@@ -55,21 +76,17 @@ for message in consumer_easyocr:
     coords = []
     for idx, prediction in enumerate(predictions):
         cords, word, confidence = prediction
-        print(word)
         text.append(word)
         coords.append(cords)
         
-    response["data"] = {"text": text, "coords": coords}
-    print(response)
+    full_res["data"] = {"text": text, "coords": coords}
+    text_res["data"] = {"text": text}
+    print(text_res)
 
-    
-    producer.send(SEND_TOPIC, value=json.dumps(response, default=convert))
+    # sending full and text res(without cordinates or probability) to kafka
+    producer.send(SEND_TOPIC_FULL, value=json.dumps(full_res, default=convert))
+    producer.send(SEND_TOPIC_TEXT, value=json.dumps(text_res, default=convert))
+
     producer.flush()
 
-def recognize(img):
-    predictions = reader.readtext(img)
-    return predictions
 
-def convert(o):
-    if isinstance(o, numpy.int64): return int(o)  
-    raise TypeError

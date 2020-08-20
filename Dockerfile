@@ -16,4 +16,4 @@ COPY . /app
 COPY .env /app/.env
 
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["python", "server.py"]

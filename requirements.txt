@@ -1,3 +1,4 @@
 easyocr
 python-dotenv
 kafka-python
+redis

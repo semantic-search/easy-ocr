@@ -3,7 +3,7 @@ import easyocr
 
 # imports for env kafka
 from dotenv import load_dotenv
-from kafka import  KafkaProducer
+from kafka import KafkaProducer
 from kafka import KafkaConsumer
 from json import loads
 import base64
@@ -40,7 +40,7 @@ consumer_easyocr = KafkaConsumer(
     value_deserializer=lambda x: loads(x.decode("utf-8")),
 )
 
-# Kafka initialize - For Sending processed img data further 
+# Kafka initialize - For Sending processed img data further
 producer = KafkaProducer(
     bootstrap_servers=[f"{KAFKA_HOSTNAME}:{KAFKA_PORT}"],
     value_serializer=lambda x: json.dumps(x).encode("utf-8"),
@@ -52,9 +52,12 @@ def recognize(img):
     predictions = reader.readtext(img)
     return predictions
 
+
 def convert(o):
-    if isinstance(o, numpy.int64): return int(o)  
+    if isinstance(o, numpy.int64):
+        return int(o)
     raise TypeError
+
 
 for message in consumer_easyocr:
     print('xxx--- inside easyocr consumer---xxx')
@@ -64,7 +67,7 @@ for message in consumer_easyocr:
     image_id = message['image_id']
     data = message['data']
 
-    # Setting image-id to topic name(container name), so we can know which image it's currently processing 
+    # Setting image-id to topic name(container name), so we can know which image it's currently processing
     r.set(RECEIVE_TOPIC, image_id)
 
     data = base64.b64decode(data.encode("ascii"))
@@ -85,7 +88,7 @@ for message in consumer_easyocr:
         cords, word, confidence = prediction
         text.append(word)
         coords.append(cords)
-        
+
     full_res["data"] = {"text": text, "coords": coords}
     text_res["data"] = {"text": text}
     print(text_res)
@@ -95,5 +98,3 @@ for message in consumer_easyocr:
     producer.send(SEND_TOPIC_TEXT, value=json.dumps(text_res, default=convert))
 
     producer.flush()
-
-

@@ -1,7 +1,7 @@
 import numpy
 import easyocr
 
-# imports for env kafka
+# imports for env kafka redis
 from dotenv import load_dotenv
 from kafka import KafkaProducer
 from kafka import KafkaConsumer
@@ -9,6 +9,7 @@ from json import loads
 import base64
 import json
 import os
+import redis
 
 load_dotenv()
 

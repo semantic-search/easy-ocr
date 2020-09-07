@@ -22,6 +22,7 @@ def send_to_topic(topic, value_to_send_dic):
 
 if __name__ == "__main__":
     global_init()
+    print('main fxn')
     for message in init.consumer_obj:
         message = message.value
         db_key = str(message)
@@ -29,6 +30,7 @@ if __name__ == "__main__":
         db_object = Cache.objects.get(pk=db_key)
         file_name = db_object.file_name
         init.redis_obj.set(globals.RECEIVE_TOPIC, file_name)
+        print('after redis')
         if db_object.is_doc_type:
             """document"""
             print('in doc type')
@@ -38,27 +40,26 @@ if __name__ == "__main__":
                 with open(pdf_image, 'wb') as file_to_save:
                     file_to_save.write(image.file.read())
                 images_array.append(pdf_image)
-            captions_list = []
-            scores_list = []
+            text_list = []
+            coords_list = []
             text_predictions = []
             for image in images_array:
                 image_results = predict(image, doc=True)
-                captions = image_results["captions"]
-                scores = image_results["scores"]
-                captions_list.append(captions)
-                scores_list.append(scores)
+                text = image_results["text"]
+                coords = image_results["coords"]
+                text_list.append(text)
+                coords_list.append(coords)
 
             full_res = {
                 "container_name": globals.RECEIVE_TOPIC,
                 "file_name": file_name,
-                "captions": captions_list,
-                "scores": scores_list,
+                "text": text_list,
                 "is_doc_type": True
             }
             text_res = {
                 "container_name": globals.RECEIVE_TOPIC,
                 "file_name": file_name,
-                "captions": captions_list,
+                "text": text_list,
                 "is_doc_type": True
             }
             print(full_res, "full_res")
@@ -77,7 +78,7 @@ if __name__ == "__main__":
                 text_res = {
                     "container_name": globals.RECEIVE_TOPIC,
                     "file_name": file_name,
-                    "captions": full_res["captions"],
+                    "text": full_res["text"],
                     "is_doc_type": False
                 }
                 print(full_res, 'full_res')

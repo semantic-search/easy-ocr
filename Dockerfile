@@ -14,4 +14,3 @@ EXPOSE 80
 
 COPY . /app
 
-CMD ["python", "server.py"]

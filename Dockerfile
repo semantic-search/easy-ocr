@@ -14,3 +14,4 @@ EXPOSE 80
 
 COPY . /app
 
+CMD ["python", "main.py"]

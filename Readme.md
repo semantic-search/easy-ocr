@@ -1,3 +1,9 @@
+## RUN IMAGE FROM GHCR 
+
+```sh
+docker run -it --env-file .env ghcr.io/semantic-search/easy-ocr:latest
+```
+
 Build
 
 ```

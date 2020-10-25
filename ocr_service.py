@@ -2,8 +2,8 @@ import os
 import easyocr
 
 
+reader = easyocr.Reader(['en'])
 def recognize(img):
-    reader = easyocr.Reader(['en'])
     predictions = reader.readtext(img)
     return predictions
 
@@ -18,18 +18,7 @@ def predict(file_name, doc=False):
         text.append(word)
         coords.append(cords)
 
-    if doc:
-        response = {
-            "text": text,
-            "coords": coords
-        }
-    else:
-        response = {
-            "file_name": file_name,
-            "text": text,
-            "coords": coords,
-            "is_doc_type": False
-        }
     os.remove(file_name)
 
+    response = ' '.join(text)
     return response

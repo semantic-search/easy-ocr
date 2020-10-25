@@ -48,7 +48,12 @@ if __name__ == "__main__":
         db_key = str(message)
         print(db_key, 'db_key')
         FILE_ID = db_key
-        db_object = Cache.objects.get(pk=db_key)
+        try:
+            db_object = Cache.objects.get(pk=db_key)
+        except Exception as e:
+            print("EXCEPTION IN GET PK... continue")
+            ERR_LOGGER(f"{e} EXCEPTION IN GET PK... continue")
+            continue
         file_name = db_object.file_name
 
         print("#############################################")
